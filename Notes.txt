@@ -1,0 +1,55 @@
+PyPSI: Python Processing of Spectral Imagery
+
+Alternative names:
+  PyPSI -- how do you pronounce it?
+           "Pip-see"  or "Pie-Sigh" (pip-squeak?)
+  SIPPy -- re-arraning the letters; too close to SPy?
+  BlueHat -- obscure reference to one of the algorithms,
+             but does't /really/ mean anything, and is
+	     just meant to be unique and easy to remember
+	     and easy to pronounce (ie a "brand"!)
+  BUSI -- Basic Utilites for Spectral Imagery
+  DTACSI -- Detection of Targets, Anomalies, and Changes in Spectral Imagery
+  BUDTAAC -- Basic Util for Detecting Targets, Anomalies, and Anomlaous Changes
+
+VISION
+
+Grande Vision is an all encompassing multi-author open-source package that does all kinds of spectral processing, focused perhaps on target detection (less emphasis on endmembers, segmentation, etc -- though may include basic algorithms if they are useful for target detection), but including gas detection, solid target detection, anomaly detection, anomalous change detection, etc.  In this grander vision, machine learning might play a sizeable role (eg, with infrastructure for matched pair machine learning).
+
+Nearer term vision is a kind of 'util' directory that enables different target detecton projects to use common 'standard' processing routines.  (I'm thinking: whitening, various matched filters, ROC utilities, etc)  The minimial aim here is just to avoid all that cutting-and-pasting, and copying and overwriting, and non-propagating updates that are inevitable when the projects are fully independent.
+
+OPEN QUESTIONS
+
+The main frustration with this notion of common standards is the interleave issue.  We can be sure that our data kits identify which interleave strategy is employed, but for intermediately processed 2d arrays (which I see as the central data structure for most of the algorithms I am contemplating), is it the first or the second dimension that is spectral. Efficiency and (some) convention seems to prefer the second, but the first is more consistent with how the mathematics is written
+
+An overall design consideration is the extent to which the package is 'matlab-like' in terms of providing basic utilities with generic interfaces, or more 'pythonic' with data structures that take advantage of python's OOP style.  For instance, should a data matrix "know" which dimension is its spectral dimension?
+
+Although I don't "like" SPy (Spectral Python), I do use it (for reading ENVI files, mostly), and its goals are very similar to mine, and some level of interoperability would be a virtue. In fact, one might argue that I should be writing routines "in SPy", perhaps by contributing my algorithms to the SPy project.  So what don't I like about SPy? 1/ it's not mine (ie, not invented here); 2/ I don't actually know who maintains it; 3/ I don't like the fact that it requires me to use its idea of data structures -- so if I start writing "in" SPy, I'll be stuch "with" SPy.
+
+DATA KITS
+
+A related (possibly integrated) vision is to develop "data kits" -- data files in some standard format, with the data cube of interest along with auxiliary data (eg, target spectra, ground truth) to enable algorithms to be tested (do they work?) and evaluated (do they work well?).  Partly this is a community service -- not only should we force newcomers to re-wrangle the data, we should enable their results to be compared with others.  Some data wrangling is just tedious, and there's no good reason to raise the barrier to entry just for its own sake; other data wrangling is more interesting (eg, band selection) and requires the kind of scientific judgement that one would like to promote.  I think comparision of algorithms is valueable, but I don't necessarily want to promote leaderboard-style competition, at least not formally, Getting back to the wrangling issue; is your new robust-to-outliers matched-filter algorithm better because it is robust to outliers, or because you made better data wrangling decisions?
+
+SOFTWARE COMPONENTS
+
+totally generic utilities:
+ verbose
+ breakpipe
+
+whiten object
+  covariance estimation, regularization
+
+covariance estimation
+  via SMT
+
+roc curve utilities
+
+interleave-aware cube flattening
+
+stripes for insample/outsample
+
+basic hdf reading utilities
+
+ABC structure for ecftmf?
+
+
