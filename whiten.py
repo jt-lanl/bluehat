@@ -26,7 +26,7 @@ def sqrtm(R):
 def invsqrtm(R,e=1.0e-6,symmetric=False,
              maxdim=0,minsv=0):
     '''Compute inverse square root of symmetric matrix R'''
-    
+
     assert R.shape[0] == R.shape[1]
     ## regularize using ridge shrinkage
     U,J,_ = np.linalg.svd(R)
@@ -56,7 +56,7 @@ def invsqrtm(R,e=1.0e-6,symmetric=False,
     return Rinvsqrt
 
 def _validate(xdata,spectral_axis):
-    '''make sure spectral_axis specification consistent with 
+    '''make sure spectral_axis specification consistent with
     xdata and with the global default defined in basic.py
     '''
     return basic.validate_spectral_axis(xdata,spectral_axis)
@@ -88,15 +88,19 @@ class Whitener:
                  symmetric=False,
                  maxdim=0,
                  minsv=0,
+                 passthru=False,
                  spectral_axis = None):
         '''Whitener object is initialized by fitting to data'''
+        self.passthru = passthru
+        if self.passthru:
+            return
         _validate(xdata,spectral_axis)
         self.spectral_axis = spectral_axis
 
         xdata,_ = self._flat(xdata)
         if xmu is None:
             xmu = basic.mean_spectrum(xdata)
-        elif isinstance(xmu,np.ndarray): 
+        elif isinstance(xmu,np.ndarray):
             xmu,_ = self._flat(xmu)
         v.vprint('xmu:',xmu.shape,'range:',
                  np.min(xmu),'< xmu <',np.max(xmu))
@@ -109,8 +113,8 @@ class Whitener:
 
     def whiten(self,xdata):
         '''return whitened data, this includes mean subtraction'''
-        if xdata is None:
-            return None
+        if self.passthru or xdata is None:
+            return xdata
         xdata,im_shape = self._flat(xdata)
         xdata = xdata - self.xmean
         wdata = xdata.dot(self.W)
@@ -120,15 +124,17 @@ class Whitener:
     def whiten_vector(self,xvector):
         '''apply whitening to single vector -- do NOT perform
         mean subtraction'''
-        if xvector is None:
-            return None
-        xvector = xvector.reshape(-1) 
+        if self.passthru or xvector is None:
+            return xvector
+        xvector = xvector.reshape(-1)
         wvector = xvector.dot(self.W)
         return wvector
 
     ## TODO: need to test restore in test_whiten code
     def restore(self,wdata):
         '''from whitened data, return to original data coordinates'''
+        if self.passthru or wdata is None:
+            return wdata
         if self.Winv is None:
             if self.W.shape[0] != self.W.shape[1]:
                 ## maybe use pinv in this case?
@@ -145,7 +151,7 @@ class Whitener:
 
     def restore_vector(self,wvector):
         '''restore whitened vactor back to its original coordinates'''
-        if wvector is None:
+        if self.passthru or wvector is None:
             return wvector
         if self.Winv is None:
             self.Winv = np.linalg.inv(self.W)
