@@ -309,7 +309,7 @@ def im_gen_dotproduct(xcube,Q=None,ycube=None,/,spectral_axis=None):
     but more generally:
     xcube.shape = [rows,samples,x_bands]
     ycube.shape = [rows,samples,y_bands]
-    Qmatrix.shape = [x_bands,y_bands]
+    Q.shape = [x_bands,y_bands]
 
     This is maybe too fancy, but:
     note: (xcube,Q,None) ==> (xcube,Q,xcube)
