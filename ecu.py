@@ -17,9 +17,31 @@ import verbose as v
 ## Bluehat utils
 from . import basic,whiten
 
+def nu_ml_fit_1d(xdata):
+    '''given 1d data xdata, used scipy to estimate nu'''
+    ## no need to whiten xdata
+    ## uses scipy package, which uses max likelihood
+    nu,mu,scale = stats.t.fit(xdata.reshape(-1))
+    return nu
+
+def nu_ml_fit(xdata):
+    '''fit nu to each channel, then average (harmonic mean)'''
+    ## do not whiten (or apply PCA) to xdata
+    if xdata.ndim == 1:
+        xdata = xdata.reshape(-1,1)
+    dim = xdata.shape[-1]
+    xdata = xdata.reshape(-1,dim)
+    nu_bychan = [1./nu_ml_fit_1d(xdata[:,d])
+                 for d in range(dim)]
+    return 1./np.mean(nu_bychan)
+        
 
 def nu_moment_estimator_fromwhite(wdata,m=1):
     '''given already-whitened data wdata, estimate nu'''
+    if m==0:
+        return nu_ml_fit(wdata)
+    if wdata.ndim == 1:
+        wdata = wdata.reshape(-1,1)
     assert wdata.ndim == 2
     _,d = wdata.shape
     r = np.sqrt( np.sum(wdata**2,axis=-1) ).reshape(-1)
@@ -27,7 +49,7 @@ def nu_moment_estimator_fromwhite(wdata,m=1):
     rden = np.mean(r**m)
     kappa = rnum/rden
 
-    v.vprint("nu: d,k=r3/r: ",d,kappa,"=",rnum,"/",rden,r.shape)
+    v.vvprint("nu: d,k=r3/r: ",d,kappa,"=",rnum,"/",rden,r.shape)
 
     if kappa <= d + m:
         est_nu = 0
@@ -57,6 +79,8 @@ def nu_moment_estimator(xdata,xmean=None,m=1,spectral_axis=None,**kw):
     hyperspectral imagery." IEEE Geoscience and Remote Sensing Letters
     7 (2010) 271-275 doi: 10.1109/LGRS.2009.2032565.
     '''
+    if xdata.ndim == 1:
+        xdata = xdata.reshape(-1,1)
     if xdata.ndim == 3:
         xdata,_ = basic.cubeflat(xdata,spectral_axis=spectral_axis)
     assert xdata.ndim == 2
