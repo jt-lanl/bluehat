@@ -237,6 +237,14 @@ xt = x[:,::10].copy()
 yt = y[:,::10].copy()
 76.5 ms ± 721 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 
+-----
+
+8-7-22
+
+Really need a better name than 'basic' (spectral? specutil? spectralprocessing/sp)
+
+
+
 
 
 
