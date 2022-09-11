@@ -141,7 +141,7 @@ class Whitener:
                 raise RuntimeError("Cannot restore whitened data "
                                    "if dimension has been reduced")
             ## No regularization here because
-            ## 1/ not needed, W be design is non-singular
+            ## 1/ not needed, W by design is non-singular
             ## 2/ restoration should be as exact as possible
             self.Winv = np.linalg.inv(self.W)
         wdata,im_shape = self._flat(wdata)

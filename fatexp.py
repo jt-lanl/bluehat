@@ -1,10 +1,12 @@
 '''Routines for fat exponentials'''
 
+from functools import cache #pylint: disable=unused-import
+
 import numpy as np
 from scipy.special import gamma
 from scipy.optimize import fsolve
 from scipy import interpolate
-from functools import cache
+
 import verbose as v
 
 def c_coef(p,a):
@@ -24,6 +26,7 @@ def m_moment(m,p):
     return xm
 
 def logpdf(x,p,c=None,a=None):
+    '''return logpdf(x) for a given balue of p'''
     if a is None:
         a = a_param(p)
     if c is None:
@@ -35,7 +38,7 @@ def fatexp(x,p,c=None,a=None):
     return np.exp(logpdf(x,p,c,a))
 
 def m_moment_inverter_ok(m,prange=None):
-    '''return a function f such that p=f(<x^m>), 
+    '''return a function f such that p=f(<x^m>),
     where <x^m> is w.r.t. fatexp(x,p); this is
     the inverse of m_moment(m,p)
     '''
@@ -53,7 +56,7 @@ def m_moment_inverter_ok(m,prange=None):
 
 #@cache
 def m_moment_inverter(m,prange=None):
-    '''return a function f such that p=f(<x^m>), 
+    '''return a function f such that p=f(<x^m>),
     where <x^m> is w.r.t. fatexp(x,p); this is
     the inverse of m_moment(m,p)
     '''
@@ -67,19 +70,19 @@ def m_moment_inverter(m,prange=None):
     v.vprint('prange:',prange)
     pvals = np.log(pvals)
     xmvals = np.log(xmvals)
-    prange = tuple([np.log(p) for p in prange])
+    prange = tuple(np.log(p) for p in prange)
     fcn = interpolate.interp1d(xmvals,pvals,bounds_error=False,
                                fill_value=tuple(prange))
     def trufcn(xm):
         xm = np.log(xm)
         pvals = fcn(xm)
         return np.exp(pvals)
-    
+
     return trufcn,xmrange
 
 def p_estimate_fsolve(xdata,m):
-    ''' 
-    use scipy.optimize.fsolve to estimate p 
+    '''
+    use scipy.optimize.fsolve to estimate p
     so that data moment: xm=|xdata|^m
     equals theoretical moment: m_moment(m,p)
     '''
@@ -97,7 +100,7 @@ def p_estimate_fsolve(xdata,m):
     po = fsolve(fcn,0.1) ## starting point low avoids getting stuck
     v.vprint(f'{po[0]=}')
     return po[0]
-    
+
 
 def p_estimate(xdata,m,m_inverter=None):
     '''Given data, provide an estimate of p'''
@@ -111,4 +114,3 @@ def p_estimate(xdata,m,m_inverter=None):
     xm = np.mean(np.abs(xdata)**m)
     v.vvprint(f'{xm=}')
     return m_inverter(xm)
-    

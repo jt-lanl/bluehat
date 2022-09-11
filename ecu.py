@@ -21,7 +21,7 @@ def nu_ml_fit_1d(xdata):
     '''given 1d data xdata, used scipy to estimate nu'''
     ## no need to whiten xdata
     ## uses scipy package, which uses max likelihood
-    nu,mu,scale = stats.t.fit(xdata.reshape(-1))
+    nu,mu,scale = stats.t.fit(xdata.reshape(-1)) #pylint: disable=unused-variable
     return nu
 
 def nu_ml_fit(xdata):
@@ -34,7 +34,6 @@ def nu_ml_fit(xdata):
     nu_bychan = [1./nu_ml_fit_1d(xdata[:,d])
                  for d in range(dim)]
     return 1./np.mean(nu_bychan)
-        
 
 def nu_moment_estimator_fromwhite(wdata,m=1):
     '''given already-whitened data wdata, estimate nu'''
@@ -65,14 +64,14 @@ def nu_moment_estimator(xdata,xmean=None,m=1,spectral_axis=None,**kw):
     ## where nu=0 is a euphemism for nu -> infinity
     ## Perhaps should make an exceedence plot??
     '''Implements moment estimator in appendix of EC-ACD paper[*]
-    Inputs: 
+    Inputs:
         xdata (2d data array or 3d image cube)
         xmean (1d mean spectrum, or 0, or None; optional, default=None)
               if None, then use computed mean from xdata
     Keywords arguments:
         m: moment to use, default = 1
         spectral_axis: if xdata is 3d, specify its spectral axis
-        **kw arguments: passed to whiten.Whitener         
+        **kw arguments: passed to whiten.Whitener
 
     [*]J. Theiler, C. Scovel, B. Wohlberg, and B. R. Foy.  "Elliptically
     contoured distributions for anomalous change detection in
@@ -89,6 +88,7 @@ def nu_moment_estimator(xdata,xmean=None,m=1,spectral_axis=None,**kw):
     return nu_moment_estimator_fromwhite(wdata,m=m)
 
 def nu_est_robust(xdata,mu=None,eps=1.0e-8,**kw):
+    '''robust estimator of nu imposes minsv=eps'''
     return nu_moment_estimator(xdata,xmean=mu,minsv=eps,**kw)
 
 def ecclutter(nu,d,shape):
@@ -134,9 +134,9 @@ def ecmimic(cube,/,nu=None,newshape=None):
 if __name__ == "__main__":
     ## Test code
     nu_true = 20
-    dim     = 320
+    xdim     = 320
     print( "tru_nu      :",nu_true)
-    im = ecclutter(nu_true,dim,[320,1444])
+    im = ecclutter(nu_true,xdim,[320,1444])
     estnu = nu_moment_estimator(im)
     print( "estnu (m=1):", estnu)
     estnu = nu_moment_estimator(im,m=2)

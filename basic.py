@@ -6,7 +6,7 @@ Basic utilities for spectral image processing:
 
 import warnings
 import numpy as np
-import verbose as v
+import verbose as v #pylint: disable=unused-import
 
 # Convention for image arrays
 # [nPixel,nBand]
@@ -23,7 +23,7 @@ import verbose as v
 DEFAULT_SPECTRAL_AXIS = None
 def set_spectral_axis(spectral_axis):
     '''
-    user must use this function to set the value 
+    user must use this function to set the value
     of the global DEFAULT_SPECTRAL_AXIS
     '''
     global DEFAULT_SPECTRAL_AXIS
@@ -31,7 +31,7 @@ def set_spectral_axis(spectral_axis):
     if spectral_axis not in [-1,0,1,2]:
         raise RuntimeError(f'Invalid spectral axis={spectral_axis}')
     DEFAULT_SPECTRAL_AXIS = spectral_axis
-    
+
 def get_spectral_axis(spectral_axis=None):
     '''return a specific spectral_axis value (None->default)'''
     if spectral_axis is not None and DEFAULT_SPECTRAL_AXIS is not None:
@@ -43,8 +43,9 @@ def get_spectral_axis(spectral_axis=None):
                                f'does not agree with default '
                                f'spectral_axis={DEFAULT_SPECTRAL_AXIS}')
     if spectral_axis is None and DEFAULT_SPECTRAL_AXIS is None:
-        warnings.warn(f'must specificy argument spectral axis, since '
-                      f'the default spectral axis has not been set')
+        warnings.warn('must specificy argument spectral axis, since '
+                      'the default spectral axis has not been set; '
+                      'use basic.set_spectral_axis(-1) for example')
     return DEFAULT_SPECTRAL_AXIS if spectral_axis is None else spectral_axis
 
 def validate_spectral_axis(xdata,spectral_axis):
@@ -122,10 +123,11 @@ def cubeflat(cube,/,
         r,d,s = cube.shape
         xdata = np.moveaxis(cube,1,-1).reshape(-1,d)
     elif spectral_axis is None:
-        raise RuntimeError('Must specficy spectral axis')
+        raise RuntimeError('Must specficy spectral axis;'
+                           ' use basic.set_spectral_axis(-1) for instance.')
     else:
         raise RuntimeError(f'Invalid spectral axis: {spectral_axis}')
-    
+
     im_shape = (r,s)
     return xdata,im_shape
 
@@ -226,7 +228,7 @@ def im_mu_covar(cube,/,spectral_axis=None):
     mu = im_mean_spectrum(cube,spectral_axis=spectral_axis)
     R = im_covar(cube,mu,spectral_axis=spectral_axis)
     return mu,R
-    
+
 
 def applyfilter(q, xdata, mu=None):
     '''

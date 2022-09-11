@@ -7,7 +7,7 @@ import math
 import numpy as np
 from scipy.stats import norm,t
 
-import verbose as v
+import verbose as v #pylint: disable=unused-import
 
 from . import ecu
 from . import fatexp
@@ -163,3 +163,8 @@ def get_model_class(name):
         return MODELS[name]
     ## otherwise
     raise RuntimeError(f"Invalid model name: {name}; try: {list(MODELS)}")
+
+def get_model(name,xdata):
+    '''return an initialized model object'''
+    ModelClass = get_model_class(name)
+    return ModelClass(xdata)

@@ -13,8 +13,9 @@ except ImportError:
     SPY_AVAIL=False
 
 if SPY_AVAIL:
-    
+
     def write_envi_image(filename,img):
+        '''write ENVI formatted file with img data in it'''
         if len(img.shape) == 2:
             img = img.reshape(img.shape[0],img.shape[1],1)
         v.vprint("Writing to",filename,"and",filename+'.hdr')
@@ -64,23 +65,25 @@ def read_cube(filename,tag=None,interleave=None,bandsample=None):
         if interleave and cube_interleave and cube_interleave != interleave:
             raise RuntimeError("Confliciting interleave")
         interleave = interleave or cube_interleave
-        
+
         v.vprint("interleave=",interleave)
         cube = np.array(cube).astype(float)
         if interleave == 'BSQ':
             cube = np.moveaxis(cube,0,-1)
             interleave = 'BIP'
 
-        v.vprint('shape:',cube.shape,np.min(cube),np.max(cube))
+        if bandsample:
+            cube = cube[:,:,::bandsample]
+
         return cube
-    
+
 def read_cube_target(filename,
                      tag='cube',
                      targettag='target',
                      interleave=None,
                      bandsample=None):
     '''
-    read hdf5 file; return image cube, target spectrum, 
+    read hdf5 file; return image cube, target spectrum,
     and (optionally) array of associated wavelenghts
     '''
     with h5py.File(filename,'r') as f:
@@ -91,7 +94,7 @@ def read_cube_target(filename,
         if interleave and cube_interleave and cube_interleave != interleave:
             raise RuntimeError("Confliciting interleave")
         interleave = interleave or cube_interleave
-        
+
         v.vprint("interleave=",interleave)
         cube = np.array(cube).astype(float)
         if interleave == 'BSQ':
@@ -120,4 +123,3 @@ def read_cube_target(filename,
             w = w[::bandsample]
 
     return cube,tgt,w
-
