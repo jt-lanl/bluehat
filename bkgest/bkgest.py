@@ -16,7 +16,7 @@ class FlatRegressor:
     '''
     def fit(self,xfeatures,ytrue):
         '''no actual fitting'''
-        pass
+        return self
 
     def predict(self,xdata):
         '''prediction is just first component of xdata'''
@@ -104,6 +104,7 @@ class BackgroundEstimator:
                               self.rout:-self.rout].copy()
             x_features = self.annfcn(band_data)
             self.band_predictor[band] = get_predictor(y_true,x_features,flat=self.flat)
+        return self
 
     def predict(self,xcube):
         '''apply the predictor that was obtained in the fit method'''
