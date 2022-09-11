@@ -1,0 +1,3 @@
+## empty __intit__.py enables pylint to work
+## without being confused by relative imports
+## i'm not sure exactly why this works...
