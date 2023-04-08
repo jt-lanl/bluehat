@@ -187,6 +187,40 @@ def fapd_fcn_of_pd(fa,pd):
     ndx[:-1] = pd[1:] != pd[:-1]
     return fa[ndx],pd[ndx]
 
+# 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
+# Returns a positive value, if OAB makes a counter-clockwise turn,
+# negative for clockwise turn, and zero if the points are collinear.
+def _cross(o, a, b):
+    '''internal cross product'''
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+def fapd_hull(fa,pd):
+    '''
+    input ROC curve as arrays fa,pd
+    return ROC curve as new arrays fa,pd;
+    where the new fa,pd is a subset of the original fa,pd
+    corresponding to the convex hull of the points on the curve;
+    (and regardless of order of input arrays, output array will
+    by in reverse sorted order; ie, first element fa[0]=1,pd[0]=1)
+    uses the 'monotone chain' algorithm described in
+    https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
+    '''
+    assert len(fa)==len(pd)
+
+    hull = []
+    for p in reversed(sorted(zip(fa,pd))):
+        while len(hull)>1 and _cross(hull[-2], hull[-1], p) <= 0:
+            hull.pop()
+        hull.append(p)
+
+    ## more pythonic? kind of abstruse, but it seems to work!
+    return tuple(map(np.array,zip(*hull)))
+
+    ## here's what the above code is doing; this is less "elegant"
+    ## but it's easier for us humans to read
+    #return (np.array([xfa for xfa,_ in hull]),
+    #        np.array([xpd for _,xpd in hull]))
+
 
 def fapdsample(fa,pd,g=1.1):
     ''' return a subsample of fa,pd points; keeps plotter from
