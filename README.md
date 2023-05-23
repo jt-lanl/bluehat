@@ -6,7 +6,7 @@ imagery, with an emphasis on various kinds of target detection.  The
 package provides collections of utilities that developers can use in
 producing algorithms for specific target detection scenarios. In particular,
 this package was used to develop the algorithms used by the 
-on-board software in the NACHOS project.
+on-board software in the [NACHOS](https://esto.nasa.gov/invest/nachos/) project.
 
 # Vision
 
