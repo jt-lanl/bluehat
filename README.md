@@ -1,6 +1,6 @@
 # README
 
-**Bluehat** is a collection of python routines to facilitate the
+**BlueHat** is a collection of python routines to facilitate the
 analysis of spectral (multispectral and hyperspectral) remote sensing
 imagery, with an emphasis on various kinds of target detection.  The
 package provides collections of utilities that developers can use in
@@ -30,7 +30,7 @@ multiple projects are independently maintained.
  
 ### About the name
 
-**Bluehat** does not really mean anything at all.  The name refers to
+**BlueHat** does not really mean anything at all.  The name refers to
 a graphic that describes a particular approach for local background
 estimation in multispectral imagery. A pixel under test (indicated in
 blue) is estimated as a function of the pixels (indicated in pink) in
@@ -41,7 +41,7 @@ estimate.
 
 Although **bluehat** was not chosen to be an acronym, you can perhaps
 think of it as **Blue** **H**yperspectral **A**nalysis **T**ools.
-And you can perhaps think of "**blue**" as "**B**est **L**et **U**
+And you can perhaps think of "**blue**" as "**B**est **L**et **U**sers
 **E**xperiment" -- since the aim of this software is not to furnish
 end-users with canned target detectors, but to provide algorithm
 developers with utilities that empower them to create their own
@@ -143,6 +143,6 @@ in my own research, and these often differ from what is available in
 
 This program was produced under U.S. Government contract 89233218CNA000001 for Los Alamos National Laboratory (LANL), which is operated by Triad National Security, LLC for the U.S. Department of Energy/National Nuclear Security Administration. All rights in the program are reserved by Triad National Security, LLC, and the U.S. Department of Energy/National Nuclear Security Administration. The Government is granted for itself and others acting on its behalf a nonexclusive, paid-up, irrevocable worldwide license in this material to reproduce, prepare derivative works, distribute copies to the public, perform publicly and display publicly, and to permit others to do so.
 
-Open-Source Copyright Assertion _C23024_ BlueHat
+Open-Source Copyright Assertion **C23024** BlueHat
 
 
