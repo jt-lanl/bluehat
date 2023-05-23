@@ -1,8 +1,12 @@
+# README
+
 **Bluehat** is a collection of python routines to facilitate the
 analysis of spectral (multispectral and hyperspectral) remote sensing
-imagery, with an emphasis on various kind of target detection.  The
+imagery, with an emphasis on various kinds of target detection.  The
 package provides collections of utilities that developers can use in
-producing algorithms for specific target detection scenarios.
+producing algorithms for specific target detection scenarios. In particular,
+this package was used to develop the algorithms used by the 
+on-board software in the NACHOS project.
 
 # Vision
 
@@ -15,14 +19,14 @@ are useful for target detection. In this grander vision, machine
 learning might play a sizable role (eg, with tools for matched pair
 machine learning).
 
- A nearer-term vision is a kind of _'util'_ directory that enables
- different target detection projects to use common 'standard'
- processing routines.  (I'm thinking: covariance estimation, principal
- components and whitening, various matched filters, ROC
- [receiver-operator characteristic] curve utilities, etc.)  The
- minimal aim here is just to avoid all that cutting-and-pasting, and
- copying and overwriting, and non-propagating updates that are
- inevitable when multiple projects independently maintained.
+A nearer-term vision is a kind of _'util'_ directory that enables
+different target detection projects to use common 'standard'
+processing routines.  (I'm thinking: covariance estimation, principal
+components and whitening, various matched filters, ROC
+[receiver operating characteristic] curve utilities, etc.)  The minimal
+aim here is just to avoid all that cutting-and-pasting, and copying
+and overwriting, and non-propagating updates that are inevitable when
+multiple projects are independently maintained.
  
 ### About the name
 
@@ -36,20 +40,21 @@ estimate.
 ![blue hat pixel is a function of pink annulus pixels](Images/regress-hat-ss.png)
 
 Although **bluehat** was not chosen to be an acronym, you can perhaps
-think of it as **Blue** **H**yperspectral **A**nalysis **T**ools,
-where "**blue**" might be thought of as "**B**est **L**et **U**
+think of it as **Blue** **H**yperspectral **A**nalysis **T**ools.
+And you can perhaps think of "**blue**" as "**B**est **L**et **U**
 **E**xperiment" -- since the aim of this software is not to furnish
 end-users with canned target detectors, but to provide algorithm
 developers with utilities that empower them to create their own
 designs and to perform their own experiments.  Which is to say: this
-software is designed primarily for myself, and secondarily, for people
+software is designed primarily for me, and secondarily for people
 like me.
 
-Second place, by the way, was **S**ome **U**tilites for **S**pectral **I**mage
-**E**xploitation and **Q**uantification with the acronym SUSIEQ.
-Third place was **L**ocal/**G**lobal **U**tilites for **S**pectral
-**I**magery with the acronym LUSI/GUSI.  If you are looking to write your
-own spectral image analysis software package, these names are both available.
+Second place, by the way, was **S**ome **U**tilities for **S**pectral
+**I**mage **E**xploitation and **Q**uantification with the acronym
+SUSIEQ.  Third place was **L**ocal/**G**lobal **U**tilites for
+**S**pectral **I**magery with the acronym LUSI/GUSI.  If you are
+looking to write your own spectral image analysis software package,
+these names are both available.
 
 # Data structures and file formats
 
@@ -82,7 +87,7 @@ choice is HDF5, which allows multiple datasets, and arbitrary
 metadata, all in a single file.  And especially large files can be set
 up to be read in efficient incremental ways.
  
-# Modules
+# List of Modules
 
 * **basic**: basic spectral routines, means and covariances, and
   infrastructure for dealing with different interleave options (BIP,
@@ -122,10 +127,22 @@ up to be read in efficient incremental ways.
 
 # Relation to Spectral Python (SPy)
 
-Spectral Python (**Spy**) is an excellent package, but **bluehat** is
-wholly independent of **SPy** (and vice-versa!).  If you are
-thinking about using **bluehat** for the first time, you should check
-out **SPy** as well, to see which is more useful for your purposes.
-I have tried to employ more generic data structures in **bluehat** and
-I have included utilities that _I_ have found useful in my own research,
-and these often differ from what is available in **SPy**.
+Spectral Python (**SPy**) is an excellent package, but **bluehat** is
+mostly independent of **SPy** (bluehat currently calls SPy's ENVI
+reading libraries, and SPy is totally independent of bluehat).  If you
+are thinking about using **bluehat** for the first time, you should
+check out **SPy** as well, to see which is more useful for your
+purposes.  I have tried to employ more generic data structures in
+**bluehat** and I have included utilities that _I_ have found useful
+in my own research, and these often differ from what is available in
+**SPy**.
+
+# COPYRIGHT
+
+(c) 2023. Triad National Security, LLC. All rights reserved.
+
+This program was produced under U.S. Government contract 89233218CNA000001 for Los Alamos National Laboratory (LANL), which is operated by Triad National Security, LLC for the U.S. Department of Energy/National Nuclear Security Administration. All rights in the program are reserved by Triad National Security, LLC, and the U.S. Department of Energy/National Nuclear Security Administration. The Government is granted for itself and others acting on its behalf a nonexclusive, paid-up, irrevocable worldwide license in this material to reproduce, prepare derivative works, distribute copies to the public, perform publicly and display publicly, and to permit others to do so.
+
+Open-Source Copyright Assertion _C23024_ BlueHat
+
+
