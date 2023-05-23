@@ -41,9 +41,9 @@ estimate.
 
 Although **bluehat** was not chosen to be an acronym, you can perhaps
 think of it as **Blue** **H**yperspectral **A**nalysis **T**ools.
-And you can perhaps think of "**blue**" as "**B**est **L**et **U**sers
+And you can perhaps think of "**blue**" as "**B**est **L**et **U**
 **E**xperiment" -- since the aim of this software is not to furnish
-end-users with canned target detectors, but to provide algorithm
+ultimate end-users with canned target detectors, but to provide algorithm
 developers with utilities that empower them to create their own
 designs and to perform their own experiments.  Which is to say: this
 software is designed primarily for me, and secondarily for people
@@ -121,11 +121,13 @@ up to be read in efficient incremental ways.
 * **verbose**: generic utilities for writing informational and/or
   warning messages conditioned on a user-specified level of verbosity.
 
+<!---
 * ...: In these early stages of development, modules may come and go,
   may be split or combined, or may have their API's extensively
   changed. Sorry about that.
+--->
 
-# Relation to Spectral Python (SPy)
+## Relation to Spectral Python (SPy)
 
 Spectral Python (**SPy**) is an excellent package, but **bluehat** is
 mostly independent of **SPy** (bluehat currently calls SPy's ENVI
