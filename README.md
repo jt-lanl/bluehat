@@ -1,4 +1,4 @@
-# README
+# BLUEHAT
 
 **BlueHat** is a collection of python routines to facilitate the
 analysis of spectral (multispectral and hyperspectral) remote sensing
@@ -8,7 +8,7 @@ producing algorithms for specific target detection scenarios. In particular,
 this package was used to develop the algorithms used by the 
 on-board software in the [NACHOS](https://esto.nasa.gov/invest/nachos/) project.
 
-# Vision
+## Vision
 
 The _Grande Visione_ is an all-encompassing multi-author open-source
 package that does all kinds of spectral image processing, focused
@@ -49,14 +49,15 @@ designs and to perform their own experiments.  Which is to say: this
 software is designed primarily for me, and secondarily for people
 like me.
 
-Second place, by the way, was **S**ome **U**tilities for **S**pectral
+Second place, by the way, in terms of giving this package a name, 
+was **S**ome **U**tilities for **S**pectral
 **I**mage **E**xploitation and **Q**uantification with the acronym
 SUSIEQ.  Third place was **L**ocal/**G**lobal **U**tilites for
 **S**pectral **I**magery with the acronym LUSI/GUSI.  If you are
 looking to write your own spectral image analysis software package,
 these names are both available.
 
-# Data structures and file formats
+## Data structures and file formats
 
 An overall design consideration is the extent to which the package is
 more 'matlab-like' in terms of providing basic utilities with generic
@@ -87,7 +88,7 @@ choice is HDF5, which allows multiple datasets, and arbitrary
 metadata, all in a single file.  And especially large files can be set
 up to be read in efficient incremental ways.
  
-# List of Modules
+## List of Modules
 
 * **basic**: basic spectral routines, means and covariances, and
   infrastructure for dealing with different interleave options (BIP,
@@ -127,17 +128,17 @@ up to be read in efficient incremental ways.
   changed. Sorry about that.
 --->
 
-## Relation to Spectral Python (SPy)
+### Relation to Spectral Python (SPy)
 
-Spectral Python (**SPy**) is an excellent package, but **bluehat** is
-mostly independent of **SPy** (bluehat currently calls SPy's ENVI
-reading libraries, and SPy is totally independent of bluehat).  If you
-are thinking about using **bluehat** for the first time, you should
-check out **SPy** as well, to see which is more useful for your
-purposes.  I have tried to employ more generic data structures in
-**bluehat** and I have included utilities that _I_ have found useful
-in my own research, and these often differ from what is available in
-**SPy**.
+[Spectral Python](https://www.spectralpython.net/) (**SPy**) is an
+excellent package, but **bluehat** is mostly independent of **SPy**
+(**bluehat** currently calls SPy's ENVI reading libraries, and SPy is
+totally independent of bluehat).  If you are thinking about using
+**bluehat** for the first time, you should check out **SPy** as well,
+to see which is more useful for your purposes.  I have tried to employ
+more generic data structures in **bluehat** and I have included
+utilities that _I_ have found useful in my own research, and these
+often differ from what is available in **SPy**.
 
 # COPYRIGHT
 
