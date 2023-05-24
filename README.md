@@ -98,6 +98,8 @@ up to be read in efficient incremental ways.
 
 * **whiten**: routines for principal components and data whitening
 
+* **smt**: sparse matrix transform (for approximating convariance matrices)
+
 * **rocu**: utilities for ROC curves
 
 * **densitymodels**: implements density models for Gaussian,
