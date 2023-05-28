@@ -81,22 +81,6 @@ class GivensRotation:
         '''return tuple of i,j,c,s'''
         return self.i,self.j,self.c,self.s
 
-    def apply(self,X,sgn=1):
-        '''apply rotation to matrix X
-        sgn=-1 corresponds to rotation by -theta, 
-        which is useful as an inverse operation'''
-        i,j,c,s = self.ijcs()
-        Xi =      c*X[i,:] + sgn*s*X[j,:]
-        Xj = -sgn*s*X[i,:] +     c*X[j,:]
-        X[i,:] = Xi
-        X[j,:] = Xj
-        return X
-
-    def apply_to_vector(self,x,sgn=1):
-        '''apply rotaion to vector x'''
-        x = self.apply(x.reshape(-1,1),sgn=sgn)
-        return x.reshape(-1)
-
     def matrix(self,d):
         ''' Implemented mostly for debugging purposes; 
         reutrns the matrix G that corresponds to the the Givens rotation.  
@@ -104,12 +88,37 @@ class GivensRotation:
         except that the matrix multiply would be more computationally expensive.  
         Note also, np.dot(G,X) is equivalent to Givens.apply(X,sgn=-1) 
         '''
+        ## if i=0,j=1,d=2; then the 2x2 matrix is of the form [[c,-s],[s,c]].
         i,j,c,s = self.ijcs()
+        assert d > max([i,j])
         G = np.identity(d)
         G[i,i] = G[j,j] = c
         G[i,j] = -s
         G[j,i] = s
         return G
+
+    def apply(self,X,sgn=1):
+        '''apply rotation to matrix X
+        sgn=-1 corresponds to rotation by -theta, 
+        which is useful as a transpose or an inverse operation'''
+        i,j,c,s = self.ijcs()
+        Xi =      c*X[i,:] + sgn*s*X[j,:]
+        Xj = -sgn*s*X[i,:] +     c*X[j,:]
+        X[i,:] = Xi
+        X[j,:] = Xj
+        return X
+
+    def multiply(self,X):
+        return self.apply(X,sgn=-1)
+
+    def apply_to_vector(self,x,sgn=1):
+        '''apply rotaion to vector x'''
+        x = self.apply(x.reshape(-1,1),sgn=sgn)
+        return x.reshape(-1)
+
+    def multiply_by_vector(self,x):
+        return apply_to_vector(self,x,sgn=-1)
+
 
 
 def smt_rhat(Glist,D):
@@ -176,54 +185,54 @@ class SMT:
         call with R.copy() if you want to avoid that
         '''
         d = R.shape[0]
-        self = cls(d)
+        smt = cls(d)
         Glist,R = smt_compute(R,K)
-        self.Glist = Glist
-        self.D = np.diag(R)
-        return self
+        smt.Glist = Glist
+        smt.D = np.diag(R)
+        return smt
 
-    def approx_covariance(self,inverse=False):
+    def approx_covariance(self,inverse=False,sqrt=False):
         ''' return the symmetric matrix corresponding to this SMT, 
         it approximates the covariance matrix used to initialize it
         note inverse approx covariance can be computed with virtually the same effort
         and in a very similar way
         '''
         D = 1.0/self.D if inverse else self.D
-        return smt_rhat(self.Glist,D)
-
-    def rotations_matrix(self):
-        ''' Return the orthogonal rotation matrix E = G1*G2*...*GK, 
-        with property Rhat = E*D*E'.
-        '''
-        # Note that E' = GK'*...*G2'*G1'*I, 
-        # so we recursively G.apply() starting with identity,
-        # and finally return the transpose of E'
-        Et = np.identity(self.d)
-        for G in self.Glist:
-            # Note: G.apply(X) corresponds to G'*X
-            Et = G.apply(Et)
-        return Et.T
+        if sqrt:
+            D = np.sqrt(D)
+        R = np.diag(D)
+        for G in reversed(self.Glist):
+            ## G*R*G' = G*(G*R')'
+            R = G.multiply(R.T)  # G*R'
+            R = G.multiply(R.T)  # G*(G*R')'
+        return R
 
     def rotations_apply(self,X):
-        ''' only apply the rotations to X, not the scaling factor at the end;
+        ''' only apply the rotations to X; over-writing X.
         Equivalent to E'*X, where E given by rotation_matrix() above '''
         for G in self.Glist:
             X = G.apply(X)
         return X
 
-    def scale(self):
-        return self.D
+    def rotations_matrix(self):
+        ''' Return the orthogonal rotation matrix E = G1*G2*...*GK, 
+        with property Rhat = E*D*E'.
+        '''
+        ## obtained by (E'I).T
+        return self.rotations_apply(np.eye(self.d)).T
 
     def whiten_apply(self,X):
-        ''' apply whitening operator to X
+        ''' apply whitening operator to X; over-writing X.
         This is morally (but not strictly) equivalent to multiplying by R^{-1/2}
         Strictly, it is D^{-1/2}*E'*X, where E is the rotation matrix
         '''
-        for G in self.Glist:
-            X = G.apply(X)
-        L = 1.0/np.sqrt(self.D)
-        X *= L.reshape(-1,1)
+        X = self.rotations_apply(X)
+        X *= (1.0/np.sqrt(self.D)).reshape(-1,1)
         return X
+
+    def whiten_matrix(self):
+        W = self.whiten_apply(np.eye(self.d)).T
+        return W
 
     def mahalanobis(self,X):
         ''' compute Mahalanobis distance (aka, RX)
@@ -236,70 +245,57 @@ class SMT:
         r = r.reshape(Xshape[1:])
         return r
 
-    ## following routines are mostly for debugging, not important for our purposes
-
-    def rhat_inv(self):
-        return smt_rhat(self.Glist,1.0/self.D)
-        
-    def white_matrix_sym(self):
+    def whiten_matrix_sym(self):
         ''' There are /many/ matrices W that can whiten data; this one is symmetric '''
-        return smt_rhat(self.Glist,1.0/np.sqrt(self.D))
+        return self.approx_covariance(inverse=True,sqrt=True)
 
-    def whiten_matrix(self):
-        ''' There are /many/ matrices W that can whiten data; this one uses less computation.'''
-        R = np.diag(1.0 / np.sqrt(self.D) )
-        for G in reversed(self.Glist):
-            R = G.apply(R,sgn=-1)
-        return R
+    @classmethod
+    def testclass(cls):
+        '''Run some basic tests to see if class is working'''
+        ## Note this routine can also be used for classes
+        ## that are derived from this class
 
-    def slow_whiten_apply(self,X):
-        ''' should give the same result as whiten_apply()'''
-        W = self.whiten_matrix()
-        X = np.dot(W.T,X)
-        return X
+        np.random.seed(17)
+
+        d=5
+        N=8
+        K=12
+        Y = np.random.randn(d,N)
+        Ro = np.dot(Y,Y.T)/N
+
+        for krot in range(1,K+1):
+            obj = cls.init_from_covariance(Ro.copy(),krot)
+
+            Rx = obj.approx_covariance()
+            Rxinv = obj.approx_covariance(inverse=True)
+            RxinvRo = np.dot(Rxinv,Ro)
+            print('%2d Max |RxinvRo - I|= %.6f Max |Ro-Rx|- %.6f' %
+                  (krot,
+                   np.max(np.abs(RxinvRo-np.eye(d))),
+                   np.max(np.abs(Ro-Rx))))
+
+        X = np.random.randn(d,N)
+
+        rmahal = obj.mahalanobis(X)
+        print('Mahalanobis:',rmahal[:5])
+        print('Mahalanobis:',np.mean(rmahal),'+/-',np.std(rmahal))
+
+        print("Symmetric White Matrix")
+        W = obj.whiten_matrix_sym()
+        print(W)
+        print(W.T.dot(Rx).dot(W).round(decimals=3))
+        print(W.T.dot(Ro).dot(W).round(decimals=3))
+
+        print("Asymmetric White Matrix")
+        W = obj.whiten_matrix()
+        print(W)
+        print(W.T.dot(Rx).dot(W).round(decimals=3))
+        print(W.T.dot(Ro).dot(W).round(decimals=3))
 
 
-        
-## code below for testing purposes
+if __name__ == '__main__':
 
-def smt_rhat_whiten2(Glist,D):
-    R = np.diag(1.0 / np.sqrt(D) )
-    for G in reversed(Glist):
-        R = G.apply(R,sgn=-1)
-    return R
-
-def smt_rhat_inv(Glist,D):
-    return smt_rhat(Glist, 1.0/D)
-
-def smt_rhat_whiten(Glist,D):
-    return smt_rhat(Glist, 1.0/np.sqrt(D))
-
-if __name__ == "__main__":
-    ## Code below is just for testing, not for production
-
-    np.random.seed(17)
-
-    d=5 #320
-    N=8 #800
-    K=15 #600
-    Y = np.random.randn(d,N)
-    Ro = np.dot(Y,Y.T)/N
-
-    for krot in range(1,K+1):
-        smt = SMT.init_from_covariance(Ro.copy(),krot)
-
-        Rx = smt.approx_covariance()
-        Rxinv = smt.approx_covariance(inverse=True)
-        RxinvRo = np.dot(Rxinv,Ro)
-        print('%2d Max |RxinvRo - I|= %.6f Max |Ro-Rx|- %.6f' %
-              (krot,
-               np.max(np.abs(RxinvRo-np.eye(d))),
-               np.max(np.abs(Ro-Rx))))
-
-        
-    
-
-    
+    SMT.testclass()
 
     
     
