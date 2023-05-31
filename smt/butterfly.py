@@ -7,9 +7,9 @@ in four positions (ii,ij,ji,jj), the fast Butterfly differs in only
 two positions (ij,ji).  Also, whereas the Givens rotation is (as it
 says in the name) a rotation, the fast Butterfly does some scaling as
 well as rotating. Considering only i,j'th rows/columns, the (now 2x2)
-Givens matrix is of the form G=[[c,-s],[s,c]], where c and s correspond
-to the cosine and sine of some angle theta.  The fast Butterfly matrix
-is of the form B=[[1,a],[b,1]].  
+Givens matrix is of the form G=[[c,-s],[s,c]], where c and s
+correspond to the cosine and sine of some angle theta.  The fast
+Butterfly matrix is of the form B=[[1,a],[b,1]].
 
 Note that if H is diagonal and G is Givens, then we can write
    BS = HG
@@ -55,25 +55,27 @@ from .smt import *
 class Butterfly(GivensRotation):
     ''' in general, a 'butterfly' is a square matrix B, which is similar to
     a GivensRotation matrix in that it only operates on a pair of rows/columns.
-    Looking only at that pair, the 2x2 matrix is of the form [[1,a],[b,1]]. 
+
     Thus, if y <- Bx is the matrix multiply then:
     y[i] = B_ii*x[i] + B_ij*x[j], and 
     y[j] = B_ji*x[i] + B_jj*x[j], and
     y[k] = x[k] for all k not in {i,j}.
-    and x[k] <- x[k] for all k except i,j.
-    For our "fast" butterfly, we consider the special case B_ii = B_jj = 1;
-    and we write: a=B_ij and b=B_ji.
-    This enables the matrix multiplication to proceed with only two scalar multiplications.
+
+    Our "fast" butterfly imposes B_ii=B_jj=1; and writes a=B_ij and b=B_ji.
+    This the matrix-vector multiplication above becomes
+    y[i] =   x[i] + a*x[j], and 
+    y[j] = b*x[i] +   x[j], 
+    which uses only two scalar multiplications.
 
     As usual, to "apply" a butterfly to x, we use the transpose: y = B'*x
-
     
-    Inherits methods multiply, apply_to_vector, mutlply_by_vector from GivensRotation.
+    Inherits some methods from GivensRotation:
+        multiply, apply_to_vector, mutlply_by_vector 
 
-    An alternative (and truly abstruse) name for this class might be Hesperiidae, 
-    a family of butterflies (aka Skippers) known to be particularly quick in flight.
-
+    An alternative (and abstruse) name for this class might be Hesperiidae, 
+    a family of butterflies (aka Skippers) known to be quick in flight.
     '''
+    
     def __init__(self,i,j,a,b):
         self.i = i
         self.j = j
@@ -133,7 +135,8 @@ def BS_from_HG(H,G):
     
     
 class Kal(SMT):
-    ''' Specialized variant of SMT; should give same results, but may be faster[*]
+    '''Specialized variant of SMT; 
+    should give same results, but may be faster[*]
 
     A flock of butterflies is called a kaleidescope.
     I'm not making this up, but my source is the internet, so I'm not sure.  
@@ -145,13 +148,15 @@ class Kal(SMT):
     but often using only 2*K+d scalar multiplications, vs 4*K+d for SMT.
     Analogy: Kal is to SMT as Butterfly is to GivensRotation.
 
-    ([*] note that it may not actually be much faster on conventional processors; 
-    but for many of the operations, fewer scalar multiplications [roughly half]
-    are needed; so for onboard processing, using a lower-level language [lower
-    than python], it may in fact be faster.)
+    ([*] note that it may not actually be much faster on conventional
+    processors; but for many of the operations, fewer scalar
+    multiplications [roughly half] are needed; so for onboard
+    processing, using a lower-level language [lower than python], it
+    may in fact be faster.)
 
-    Inherits from SMT: whiten_apply, whiten_matrix, mahalanobis from SMT
+    Inherits from SMT: whiten_apply, whiten_matrix, mahalanobis
     '''
+
     def __init__(self,d):
         self.d = d
         self.Blist = []
