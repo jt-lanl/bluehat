@@ -1,7 +1,7 @@
 '''
 estimates log likelihood of estimated covariance matrix
 based on leave-one-out cross-validation (LOOC), as developed
-by Hoffbeck and Landgrebe [1], and extended in [2]
+by Hoffbeck and Landgrebe [1], and extended in [2].
 [1] J. P. Hoffbeck and D. A. Landgrebe. "Covariance matrix
 estimation and classification with limited training data."
 IEEE Trans. Pattern Analysis and Machine Intelligence 18 (1996) 763–767.
@@ -34,8 +34,17 @@ def shrink_ridge(R):
     c = np.sum(np.diag(R))/d
     return c*np.eye(d)
 
-def shrink(R,shrinker=shrink_diag):
-    '''shrink a covariance matrix to a target matrix'''
+def shrink(R,shrinktarget=None):
+    '''shrink a covariance matrix to a target matrix
+    R: ridge
+    D: diag
+    '''
+    try:
+        ## upper case first character
+        shrinktarget = shrinktarget.upper()[0]
+    except (TypeError,AttributeError):
+        shrinktarget = None
+    shrinker = shrink_diag if shrinktarget=='D' else shrink_ridge
     return shrinker(R)
 
 
@@ -58,11 +67,11 @@ def f(b,r):
 
 class HoffGrebe:
     '''Hoffbeck-Landgrebe LOOC estimator of log likelihood'''
-    def __init__(self,X,a,shrinker=shrink_diag):
+    def __init__(self,X,a,shrinktarget=None):
         assert len(X.shape)==2
         n,self.d = X.shape
         self.mu,self.S = bb.im_mu_covar(X)
-        T = shrinker(self.S)
+        T = shrink(self.S,shrinktarget=shrinktarget)
 
         self.a = a
         self.b = (1-a)/(n-1)
@@ -71,7 +80,7 @@ class HoffGrebe:
         _,self.logdet_Ga = la.slogdet(Ga)
 
         ## first two terms of log likelihood
-        self.loglikett = (self.d/2)*np.log(2*np.pi) + self.logdet_Ga
+        self.loglikett = (self.d*np.log(2*np.pi) + self.logdet_Ga)/2
 
     def fmean(self,X):
         '''estimated mean value of function f()'''
@@ -80,7 +89,7 @@ class HoffGrebe:
 
     def log_likelihood_est(self,X):
         '''estimated log likelihood, based on mean of f()'''
-        return self.loglikett + self.fmean(X)
+        return self.loglikett + self.fmean(X)/2
 
     def fmean_mmapprox(self):
         '''mean-Mahalanobis approximation to mean of f'''
@@ -89,7 +98,7 @@ class HoffGrebe:
 
     def log_likelihood_prox(self):
         '''estimated log likelhood, based on mean Mahalnobis method'''
-        return self.loglikett + self.fmean_mmapprox()
+        return self.loglikett + self.fmean_mmapprox()/2
 
     def log_like_quadterm(self,X):
         '''quadratic correction term for mean Mahalanobis estimator'''
@@ -99,12 +108,22 @@ class HoffGrebe:
         rkvar = np.var(rk)
         return (rkvar/2)*b*(b*b*ro-b+2)/((1-b*ro)**3)
 
-def mc_subsample(X,nsub=None):
+    def log_likelihood_mm(self,X_mc=None):
+        '''est log likelihood bease on mean Mahalanobis method,
+        possibly including a quadratic correction if X_mc supplied
+        '''
+        loglike = self.log_likelihood_prox()
+        if X_mc is not None:
+            ## use X_mc to estimate quadratic term
+            loglike += self.log_like_quadterm(X_mc)
+        return loglike        
+
+def mc_subsample(X,nsub=0):
     '''monte carlo subsample'''
     n,d = X.shape
-    if nsub is None:
-        nsub = 5*d
-    if d < nsub < n:
+    if nsub == 0:
+        nsub = n
+    if nsub < n:
         ndx = np.random.choice(n,nsub,replace=False)
         assert len(X.shape)==2
         X_mc = X[ndx,:]
@@ -113,28 +132,24 @@ def mc_subsample(X,nsub=None):
     v.vprint('mc:',d,nsub,n,X.shape,X_mc.shape)
     return X_mc
 
-def hoffgrebe(X,a,shrinker=shrink_diag):
+def hoffgrebe(X,a,shrinktarget=None):
     '''Hoffbeck-Landgrebe estimator of log likelihood
     Input:
     X: data matrix (or datacube)
     a: shrinkage coefficient
-    shrinker: function that provides shrinkage target T
+    shrinktarget: R or D for type of shrinkage target
     '''
-    hg = HoffGrebe(X,a,shrinker=shrinker)
+    hg = HoffGrebe(X,a,shrinktarget=shrinktarget)
     return hg.log_likelihood_est(X)
 
-def hoffgrebe_mc(X,a,shrinker=shrink_diag,monte_carlo=None,X_mc=None):
+def hoffgrebe_mc(X,a,shrinktarget=None,monte_carlo=None,X_mc=None):
     '''Monte-Carlo approximation to Hoffbeck-Landgrebe'''
-    hg = HoffGrebe(X,a,shrinker=shrinker)
+    hg = HoffGrebe(X,a,shrinktarget=shrinktarget)
     if X_mc is None:
         X_mc = mc_subsample(X,nsub=monte_carlo)
     return hg.log_likelihood_est(X_mc)
 
-def hoffgrebe_mm(X,a,shrinker=shrink_diag,X_mc=None):
+def hoffgrebe_mm(X,a,shrinktarget=None,X_mc=None):
     '''Mean Mahalanobis approximation to Hoffbeck-Landgrebe'''
-    hg = HoffGrebe(X,a,shrinker=shrinker)
-    L_MM = hg.log_likelihood_prox()
-    if X_mc is not None:
-        ## use X_mc to estimate quadratic term
-        L_MM += hg.log_like_quadterm(X_mc)
-    return L_MM
+    hg = HoffGrebe(X,a,shrinktarget=shrinktarget)
+    return hg.log_likelihood_mm(X_mc=X_mc)
