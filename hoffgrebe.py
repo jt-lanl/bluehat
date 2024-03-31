@@ -15,8 +15,8 @@ import verbose as v
 
 from . import basic as bb
 
-#N_MINUS_NSTAR=0 ## use convention that n*=n (max likelihood)
-N_MINUS_NSTAR=1 ## use convention that n*=n-1 (unbiased)
+N_MINUS_NSTAR=0 ## use convention that n*=n (max likelihood)
+#N_MINUS_NSTAR=1 ## use convention that n*=n-1 (unbiased)
 
 
 def shrink_diag(R):
@@ -52,15 +52,16 @@ def shrink(R,shrinktarget=None):
     return shrinker(R)
 
 
-def true_log_likelihood(Ra,Rtrue):
+def true_neg_log_likelihood(Ra,Rtrue):
     '''return the true log likelihood
     associated with estimated covariance Ra,
     based on true covariance Rtrue
     '''
     d,_ = Rtrue.shape
+    assert Ra.shape == Rtrue.shape == (d,d)
     trace = np.trace(np.dot(la.inv(Ra),Rtrue))
     _,logdet_Ra = la.slogdet(Ra)
-    L_true = (d/2)*np.log(2*np.pi) + logdet_Ra + trace
+    L_true = (1/2)*(d*np.log(2*np.pi) + logdet_Ra + trace)
     return L_true
 
 
@@ -77,7 +78,9 @@ class HoffGrebe_Base:
     computations that don't invovle the regularization variable a.
     in particular, defines: n, nstar, mu, S
     '''
-    def __init__(self,X,meansubtract=True):
+    def __init__(self,X,
+                 meansubtract=True,
+                 shrinktarget=None):
         assert len(X.shape)==2
         self.n,_ = X.shape
         if meansubtract:
@@ -88,17 +91,20 @@ class HoffGrebe_Base:
             self.nstar = self.n
             self.mu=0
             self.S = bb.im_covar(X,0)
-
+        self.shrinktarget = shrinktarget
 
     def T(self,shrinktarget=None):
         '''creates shrinkage target'''
+        shrinktarget = shrinktarget or self.shrinktarget
         return shrink(self.S,shrinktarget=shrinktarget)
 
 class HoffGrebe(HoffGrebe_Base):
     '''Hoffbeck-Landgrebe LOOC estimator of log likelihood'''
     def __init__(self,X,a,shrinktarget=None,meansubtract=None):
-        super().__init__(X,meansubtract=meansubtract)
-        T = self.T(shrinktarget=shrinktarget)
+        super().__init__(X,
+                         meansubtract=meansubtract,
+                         shrinktarget=shrinktarget)
+        T = self.T()
 
         n = self.n
         nstar = self.nstar
@@ -113,20 +119,24 @@ class HoffGrebe(HoffGrebe_Base):
 
         ## first two terms of log likelihood
         d = self.S.shape[0]
-        self.loglikett = (d*np.log(2*np.pi) + self.logdet_Ga)/2
+        self.negloglikett = (d*np.log(2*np.pi) + self.logdet_Ga)/2
 
         ## keep parameters as attributes to self
         self.a = a
         self.b = b
+
+    def covar(self):
+        '''return regularized covariance matrix: (1-a)*S+a*T'''
+        return (1-self.a)*self.S + self.a*self.T()
 
     def fmean(self,X):
         '''estimated mean value of function f()'''
         rk = bb.im_gen_dotproduct(X-self.mu, self.Ga_inv)
         return np.mean( f(self.b,rk) )
 
-    def log_likelihood_est(self,X):
+    def neg_log_likelihood_est(self,X):
         '''estimated log likelihood, based on mean of f()'''
-        return self.loglikett + self.fmean(X)/2
+        return self.negloglikett + self.fmean(X)/2
 
     def fmean_mmapprox(self):
         '''mean-Mahalanobis approximation to mean of f'''
@@ -134,11 +144,11 @@ class HoffGrebe(HoffGrebe_Base):
         ro = ro*(self.nstar/self.n)
         return f(self.b,ro)
 
-    def log_likelihood_prox(self):
+    def neg_log_likelihood_prox(self):
         '''estimated log likelhood, based on mean Mahalnobis method'''
-        return self.loglikett + self.fmean_mmapprox()/2
+        return self.negloglikett + self.fmean_mmapprox()/2
 
-    def log_like_quadterm(self,X):
+    def neg_log_like_quadterm(self,X):
         '''quadratic correction term for mean Mahalanobis estimator'''
         rk = bb.im_gen_dotproduct(X-self.mu, self.Ga_inv)
         b = self.b
@@ -146,30 +156,29 @@ class HoffGrebe(HoffGrebe_Base):
         rkvar = np.var(rk)
         return (rkvar/2)*b*(b*b*ro-b+2)/((1-b*ro)**3)
 
-    def log_likelihood_mm(self,X_mc=None):
-        '''est log likelihood bease on mean Mahalanobis method,
-        possibly including a quadratic correction if X_mc supplied
+    def neg_log_likelihood_mm(self,X_mc=None):
+        '''estimaeg neg log likelihood beased on mean Mahalanobis method,
+        possibly including a quadratic correction if X_mc is supplied
         '''
-        loglike = self.log_likelihood_prox()
+        negloglike = self.neg_log_likelihood_prox()
         if X_mc is not None:
             ## use X_mc to estimate quadratic term
-            loglike += self.log_like_quadterm(X_mc)
-        return loglike
+            negloglike += self.neg_log_like_quadterm(X_mc)
+        return negloglike
 
 def mc_subsample(X,nsub=0):
     '''monte carlo subsample'''
-    n,d = X.shape
-    if nsub == 0:
-        nsub = n
-    if nsub < n:
+    assert len(X.shape)==2
+    n = X.shape[0]
+    if 0 < nsub < n:
         ndx = np.random.choice(n,nsub,replace=False)
-        assert len(X.shape)==2
         X_mc = X[ndx,:]
     else:
         X_mc = X
-    v.vprint('mc:',d,nsub,n,X.shape,X_mc.shape)
     return X_mc
 
+
+## These are deprecated in favor of class, defined above
 def hoffgrebe(X,a,shrinktarget=None):
     '''Hoffbeck-Landgrebe estimator of log likelihood
     Input:
@@ -178,16 +187,16 @@ def hoffgrebe(X,a,shrinktarget=None):
     shrinktarget: R or D for type of shrinkage target
     '''
     hg = HoffGrebe(X,a,shrinktarget=shrinktarget)
-    return hg.log_likelihood_est(X)
+    return hg.neg_log_likelihood_est(X)
 
 def hoffgrebe_mc(X,a,shrinktarget=None,monte_carlo=None,X_mc=None):
     '''Monte-Carlo approximation to Hoffbeck-Landgrebe'''
     hg = HoffGrebe(X,a,shrinktarget=shrinktarget)
     if X_mc is None:
         X_mc = mc_subsample(X,nsub=monte_carlo)
-    return hg.log_likelihood_est(X_mc)
+    return hg.neg_log_likelihood_est(X_mc)
 
 def hoffgrebe_mm(X,a,shrinktarget=None,X_mc=None):
     '''Mean Mahalanobis approximation to Hoffbeck-Landgrebe'''
     hg = HoffGrebe(X,a,shrinktarget=shrinktarget)
-    return hg.log_likelihood_mm(X_mc=X_mc)
+    return hg.neg_log_likelihood_mm(X_mc=X_mc)
